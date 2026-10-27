@@ -17,23 +17,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Check required files
-        run: |
-          missing=0
-          for f in README.md app/diagnostic.sh app/health-check.sh Dockerfile compose.yaml .dockerignore test.sh grade.sh; do
-            if [ ! -f "$f" ]; then
-              echo "::error::Missing required file: $f"
-              missing=1
-            fi
-          done
-          exit "$missing"
+        uses: actions/checkout@v5
 
       - name: Check executable permissions are committed
         run: |
           bad=0
-          for f in grade.sh test.sh app/diagnostic.sh app/health-check.sh; do
+          for f in grade.sh app/app.sh scripts/lint.sh scripts/build.sh tests/test.sh; do
             mode="$(git ls-files --stage -- "$f" | cut -d' ' -f1)"
             if [ "$mode" != "100755" ]; then
               echo "::error file=$f::not executable in git (mode '$mode'). Fix: git update-index --chmod=+x $f"
@@ -42,15 +31,8 @@ jobs:
           done
           exit "$bad"
 
-      - name: Bash syntax check (bash -n)
-        run: |
-          for f in app/*.sh test.sh grade.sh; do
-            echo "bash -n $f"
-            bash -n "$f"
-          done
-
-      - name: Lint Bash scripts (ShellCheck)
-        run: shellcheck -x app/*.sh test.sh grade.sh
+      - name: Lint (required files, bash -n, ShellCheck)
+        run: ./scripts/lint.sh
 
       - name: Lint Dockerfile (Hadolint)
         run: |
@@ -67,10 +49,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Run application tests
-        run: ./test.sh --no-docker
+      - name: Run tests
+        run: ./tests/test.sh
 
   # ----------------------------------------------------------------- 3. docker
   docker:
@@ -80,35 +62,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Build the image
-        run: docker build -t diagnostic-tool .
-
-      - name: Smoke test - help
-        run: docker run --rm diagnostic-tool help
-
-      - name: Smoke test - system
-        run: docker run --rm diagnostic-tool system
-
-      - name: Smoke test - disk
-        run: docker run --rm diagnostic-tool disk
-
-      - name: Smoke test - invalid command exits with code 2
-        run: |
-          rc=0
-          docker run --rm diagnostic-tool notacommand || rc=$?
-          echo "exit code: $rc"
-          [ "$rc" -eq 2 ]
-
-      - name: Smoke test - container health check
-        run: docker run --rm --entrypoint /app/health-check.sh diagnostic-tool
+      - name: Build the image and run smoke tests
+        run: ./scripts/build.sh
 
       - name: Validate Docker Compose configuration
         run: docker compose config -q
 
       - name: Smoke test - docker compose run
-        run: docker compose run --rm diagnostic system
+        run: docker compose run --rm devops-tool system-info
 
-      - name: Run the full test suite against the image
-        run: ./test.sh
