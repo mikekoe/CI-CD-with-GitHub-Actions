@@ -251,4 +251,3 @@ main() {
 }
 
 main "$@"
-if [ then
