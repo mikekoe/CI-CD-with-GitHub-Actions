@@ -251,3 +251,4 @@ main() {
 }
 
 main "$@"
+if [ then
