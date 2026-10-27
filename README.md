@@ -173,8 +173,8 @@ CI was shown to fail on a broken change and pass after the fix.
 
 | Step | Commit | Result | Run |
 |------|--------|--------|-----|
-| Broken | `Demo: introduce a Bash syntax error` | `validate` failed; `test` and `docker` skipped | `<paste URL of the failed run>` |
-| Fixed | `Revert "Demo: introduce a Bash syntax error"` | `validate`, `test` and `docker` passed | `<paste URL of the passing run>` |
+| Broken | `Demo: introduce a Bash syntax error` | `validate` failed; `test` and `docker` skipped | `https://github.com/mikekoe/CI-CD-with-GitHub-Actions/actions/runs/40549775589` |
+| Fixed | `Revert "Demo: introduce a Bash syntax error"` | `validate`, `test` and `docker` passed | `https://github.com/mikekoe/CI-CD-with-GitHub-Actions/actions/runs/40553487585` |
 
 The final workflow on `main` passes. The failing commit and the fix both stay
 in the git history.
