@@ -95,6 +95,7 @@ cmd_system_info() {
     os="$(uname -s)"
 
     if [ -r /etc/os-release ]; then
+        # shellcheck source=/dev/null
         os="$(. /etc/os-release && echo "${PRETTY_NAME:-${NAME:-$os}}")"
     fi
     if [ -r /proc/uptime ]; then
